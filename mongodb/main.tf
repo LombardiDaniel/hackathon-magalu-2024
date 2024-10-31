@@ -11,22 +11,26 @@ provider "mgc" {
   region = "br-ne1"
 }
 
-# resource "mgc_network_vpc" "mongo-db-vpc" {
-#   provider    = mgc.nordeste
-#   name        = "${var.hackathon_group}-${var.created_by}-mongodb-vpc"
-#   description = "${var.hackathon_group}-${var.created_by}-mongodb-vpc"
-#   # tags = var.tags
-# }
+resource "mgc_network_vpc" "mongo-db-vpc" {
+  provider    = mgc.nordeste
+  name        = "${var.hackathon_group}-${var.created_by}-mongodb-vpc"
+  description = "${var.hackathon_group}-${var.created_by}-mongodb-vpc"
+  # tags = var.tags
+}
 
 resource "mgc_virtual_machine_instances" "basic_instance" {
+  provider    = mgc.nordeste
   name = "${var.hackathon_group}-${var.created_by}-mongodb-node0"
   machine_type = {
-    name = "cloud-bs1.xsmall"
+    name = var.machine_type
   }
   image = {
     name = "cloud-ubuntu-22.04 LTS"
   }
   network = {
+    vpc = {
+      id = mgc_network_vpc.mongo-db-vpc.network_id
+    }
     associate_public_ip = false # If true, will create a public IP
     delete_public_ip    = false
   }

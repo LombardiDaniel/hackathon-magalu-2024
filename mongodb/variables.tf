@@ -21,3 +21,8 @@ variable "ssh_key_name" {
   type    = string
   default = "lombardi"
 }
+
+variable "machine_type" {
+  type = string
+  default = "BV1-1-10"
+}
