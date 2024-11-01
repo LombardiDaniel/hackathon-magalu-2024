@@ -35,7 +35,7 @@ backend service_backends
 EOF
 
 for i in "${!hosts[@]}"; do
-    echo -e "\t${hosts[i]}" >> /usr/local/etc/haproxy/haproxy.cfg
+    sudo echo -e "\t${hosts[i]}" >> /usr/local/etc/haproxy/haproxy.cfg
 done
 
 sudo docker run \
