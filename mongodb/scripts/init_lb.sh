@@ -40,6 +40,7 @@ sudo docker run \
     --disable-envoy-version-check=true \
     --auto-direct-node-routes=false \
     --enable-ipv4=true \
-    --enable-ipv6=true
+    --enable-ipv6=true \
+    -d
 
 sudo docker exe l4lb cilium service update --id 1 --frontend "$FRONTEND_IP:$BALANCE_IP" --backends "$BACKEND_HOSTS_COMMA_SEPARATED"

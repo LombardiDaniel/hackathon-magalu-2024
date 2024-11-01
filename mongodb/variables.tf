@@ -9,8 +9,7 @@ variable "hackathon_tags" {
 
 variable "hackathon_group" {
   type    = string
-  # default = "pejotinha_da_gringa"
-  default = "gringa"
+  default = "pejotinha_da_gringa"
 }
 
 variable "created_by" {
@@ -35,5 +34,5 @@ variable "cluster_size" {
 
 variable "lb_security_group_id" {
   type    = string
-  default = "c7032194-b9a5-4808-8c42-5098a5ee667d"
+  default = "3f0404f1-c06b-4724-ad1e-84d62956abca"
 }
