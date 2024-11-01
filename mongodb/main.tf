@@ -89,6 +89,13 @@ resource "null_resource" "provision_lb" {
   provisioner "file" {
     source      = "scripts/init_lb.sh"
     destination = "/tmp/init_lb.sh"
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      # private_key = file(var.ssh_private_key_path)
+      host        = mgc_virtual_machine_instances.lb.network.public_address
+    }
   }
 
   provisioner "remote-exec" {

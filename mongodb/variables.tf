@@ -9,7 +9,8 @@ variable "hackathon_tags" {
 
 variable "hackathon_group" {
   type    = string
-  default = "pejotinha_da_gringa"
+  # default = "pejotinha_da_gringa"
+  default = "gringa"
 }
 
 variable "created_by" {

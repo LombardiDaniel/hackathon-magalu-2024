@@ -21,7 +21,8 @@ provider "registry.terraform.io/hashicorp/null" {
 }
 
 provider "registry.terraform.io/magalucloud/mgc" {
-  version = "0.27.1"
+  version     = "0.27.1"
+  constraints = "0.27.1"
   hashes = [
     "h1:7zbXS6Y63LnPiC9GpbdStguHOuKf0qQ7HreLxPdRlbQ=",
     "zh:07ed70748c2f2793f6ce0765f71745e7349853f08552b48861b36bc2fd8836c6",
