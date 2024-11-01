@@ -1,7 +1,9 @@
 #!/bin/bash
 
+set -eu
+
 BALANCE_PORT=$1
-FRONTNED_IP=$2
+FRONTEND_IP=$2
 BACKEND_IPS_COMMA_SEPARATED=$3
 
 BACKEND_IPS_ARRAY=',' read -ra hosts <<< "$BACKEND_IPS_COMMA_SEPARATED"
@@ -19,6 +21,7 @@ sudo docker run \
     --cap-add SYS_MODULE \
     --cap-add CAP_SYS_ADMIN \
     --network host --privileged \
+    --restart always \
     -v /sys/fs/bpf:/sys/fs/bpf \
     -v /lib/modules \
     -v /var/run/cilium:/var/run/cilium/ \
@@ -38,6 +41,8 @@ sudo docker run \
     --enable-ipv4=true \
     --enable-ipv6=false
 
-sleep 5
+sleep 10
 
-sudo docker exec l4lb cilium service update --frontend "$FRONTEND_IP:$BALANCE_PORT" --backends "$BACKEND_HOSTS_COMMA_SEPARATED"
+sudo docker exec l4lb cilium service update --id 1 --frontend "$FRONTEND_IP:$BALANCE_PORT" --backends "$BACKEND_HOSTS_COMMA_SEPARATED"
+
+sudo ip addr add $FRONTEND_IP/32 dev lo label lo:v4-200

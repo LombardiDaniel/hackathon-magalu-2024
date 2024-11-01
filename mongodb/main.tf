@@ -52,10 +52,12 @@ resource "mgc_virtual_machine_instances" "instances" {
   network = {
     vpc = {
       id = mgc_network_vpc.mongo_db_vpc.network_id
-      # id = "240da5c2-7000-4b5e-ac42-f58c5723b78a"
     }
     associate_public_ip = false # If true, will create a public IP
     delete_public_ip    = false
+    interface = {
+      security_groups = [{ "id" : var.lb_security_group_id }]
+    }
   }
 
   ssh_key_name = var.ssh_key_name
@@ -73,7 +75,6 @@ resource "mgc_virtual_machine_instances" "lb" {
   network = {
     vpc = {
       id = mgc_network_vpc.mongo_db_vpc.network_id
-      # id = "240da5c2-7000-4b5e-ac42-f58c5723b78a"
     }
     associate_public_ip = true
     delete_public_ip    = true
@@ -86,10 +87,14 @@ resource "mgc_virtual_machine_instances" "lb" {
 }
 
 locals {
-  instance_ips_comma_separated = join(",", mgc_virtual_machine_instances.instances[*].network.public_address)
+  instance_ips_comma_separated = join(",", mgc_virtual_machine_instances.instances[*].network.private_address)
 }
 
-resource "null_resource" "provision_lb" {
+# output "oi" {
+#   value = mgc_virtual_machine_instances.instances[*]
+# }
+
+resource "null_resource" "provision_lb2" {
   provisioner "file" {
     source      = "scripts/init_lb.sh"
     destination = "/tmp/init_lb.sh"
@@ -104,10 +109,10 @@ resource "null_resource" "provision_lb" {
 
   provisioner "remote-exec" {
     inline = [
-      # "sudo apt-get update",
-      # "sudo su -c \"curl -sSL https://get.docker.com/ | sh\"",
+      "sudo apt-get update",
+      "sudo su -c \"curl -sSL https://get.docker.com/ | sh\"",
       "chmod +x /tmp/*.sh",
-      "/tmp/init_lb.sh 27017 ${mgc_virtual_machine_instances.lb.network.public_address} ${local.instance_ips_comma_separated}"
+      "/tmp/init_lb.sh 27017 ${mgc_virtual_machine_instances.lb.network.public_address} ${local.instance_ips_comma_separated}",
     ]
 
     connection {
