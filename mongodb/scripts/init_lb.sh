@@ -8,7 +8,7 @@ BACKEND_IPS_ARRAY=',' read -ra hosts <<< "$BACKEND_IPS_COMMA_SEPARATED"
 
 # Add a port to each host
 for i in "${!hosts[@]}"; do
-    hosts[i]="${hosts[i]}:27017"
+    hosts[i]="${hosts[i]}:${BALANCE_PORT}"
 done
 
 # Join the modified array back into a string
@@ -22,25 +22,22 @@ sudo docker run \
     -v /sys/fs/bpf:/sys/fs/bpf \
     -v /lib/modules \
     -v /var/run/cilium:/var/run/cilium/ \
-    --name l4lb cilium/cilium:stable cilium-agent \
+    -d \
+    --name l4lb \
+    cilium/cilium:stable cilium-agent \
     --bpf-lb-algorithm=maglev \
-    --bpf-lb-mode=dsr \
-    --bpf-lb-acceleration=native \
-    --bpf-lb-dsr-dispatch=ipip \
-    --devices=enp1s0 \
+    --devices=ens3 \
     --datapath-mode=lb-only \
     --enable-l7-proxy=false \
-    --tunnel=disabled \
     --install-iptables-rules=false \
     --enable-bandwidth-manager=false \
     --enable-local-redirect-policy=false \
-    --enable-hubble=false \
-    --enable-l7-proxy=false \
     --preallocate-bpf-maps=false \
     --disable-envoy-version-check=true \
     --auto-direct-node-routes=false \
     --enable-ipv4=true \
-    --enable-ipv6=true \
-    -d
+    --enable-ipv6=false
 
-sudo docker exe l4lb cilium service update --id 1 --frontend "$FRONTEND_IP:$BALANCE_IP" --backends "$BACKEND_HOSTS_COMMA_SEPARATED"
+sleep 5
+
+sudo docker exec l4lb cilium service update --frontend "$FRONTEND_IP:$BALANCE_PORT" --backends "$BACKEND_HOSTS_COMMA_SEPARATED"

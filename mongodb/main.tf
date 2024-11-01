@@ -104,8 +104,9 @@ resource "null_resource" "provision_lb" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo apt-get update",
-      "sudo su -c \"curl -sSL https://get.docker.com/ | sh\"",
+      # "sudo apt-get update",
+      # "sudo su -c \"curl -sSL https://get.docker.com/ | sh\"",
+      "chmod +x /tmp/*.sh",
       "/tmp/init_lb.sh 27017 ${mgc_virtual_machine_instances.lb.network.public_address} ${local.instance_ips_comma_separated}"
     ]
 
