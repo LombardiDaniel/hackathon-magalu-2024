@@ -23,6 +23,11 @@ variable "ssh_key_name" {
 }
 
 variable "machine_type" {
-  type = string
+  type    = string
   default = "BV1-1-10"
+}
+
+variable "cluster_size" {
+  type    = number
+  default = 3
 }

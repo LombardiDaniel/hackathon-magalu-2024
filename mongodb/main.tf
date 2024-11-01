@@ -11,7 +11,7 @@ provider "mgc" {
   region = "br-ne1"
 }
 
-resource "mgc_network_vpc" "mongo-db-vpc" {
+resource "mgc_network_vpc" "mongo_db_vpc" {
   provider    = mgc.nordeste
   name        = "${var.hackathon_group}-${var.created_by}-mongodb-vpc"
   description = "${var.hackathon_group}-${var.created_by}-mongodb-vpc"
@@ -19,8 +19,9 @@ resource "mgc_network_vpc" "mongo-db-vpc" {
 }
 
 resource "mgc_virtual_machine_instances" "basic_instance" {
-  provider    = mgc.nordeste
-  name = "${var.hackathon_group}-${var.created_by}-mongodb-node0"
+  provider = mgc.nordeste
+  count    = var.cluster_size
+  name     = "${var.hackathon_group}-${var.created_by}-mongodb-node-${count.index}"
   machine_type = {
     name = var.machine_type
   }
@@ -29,7 +30,7 @@ resource "mgc_virtual_machine_instances" "basic_instance" {
   }
   network = {
     vpc = {
-      id = mgc_network_vpc.mongo-db-vpc.network_id
+      id = mgc_network_vpc.mongo_db_vpc.network_id
     }
     associate_public_ip = false # If true, will create a public IP
     delete_public_ip    = false
