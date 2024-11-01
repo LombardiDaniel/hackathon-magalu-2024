@@ -17,11 +17,11 @@ provider "mgc" {
   region = "br-ne1"
 }
 
-# resource "mgc_network_vpc" "mongo_db_vpc" {
-#   provider = mgc.nordeste
-#   name        = "${var.hackathon_group}-${var.created_by}-mongodb-vpc"
-#   description = "${var.hackathon_group}-${var.created_by}-mongodb-vpc"
-# }
+resource "mgc_network_vpc" "mongo_db_vpc" {
+  provider = mgc.nordeste
+  name        = "${var.hackathon_group}-${var.created_by}-mongodb-vpc"
+  description = "${var.hackathon_group}-${var.created_by}-mongodb-vpc"
+}
 
 # LER README!!
 # resource "mgc_network_security_groups" "lb_security_group" {
@@ -51,8 +51,8 @@ resource "mgc_virtual_machine_instances" "instances" {
   }
   network = {
     vpc = {
-      # id = mgc_network_vpc.mongo_db_vpc.network_id
-      id = "240da5c2-7000-4b5e-ac42-f58c5723b78a"
+      id = mgc_network_vpc.mongo_db_vpc.network_id
+      # id = "240da5c2-7000-4b5e-ac42-f58c5723b78a"
     }
     associate_public_ip = false # If true, will create a public IP
     delete_public_ip    = false
@@ -72,8 +72,8 @@ resource "mgc_virtual_machine_instances" "lb" {
   }
   network = {
     vpc = {
-      # id = mgc_network_vpc.mongo_db_vpc.network_id
-      id = "240da5c2-7000-4b5e-ac42-f58c5723b78a"
+      id = mgc_network_vpc.mongo_db_vpc.network_id
+      # id = "240da5c2-7000-4b5e-ac42-f58c5723b78a"
     }
     associate_public_ip = true
     delete_public_ip    = true
@@ -97,7 +97,7 @@ resource "null_resource" "provision_lb" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      # private_key = file(var.ssh_private_key_path)
+      private_key = file("~/.ssh/id_rsa")
       host        = mgc_virtual_machine_instances.lb.network.public_address
     }
   }
@@ -112,7 +112,7 @@ resource "null_resource" "provision_lb" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      # private_key = file(var.ssh_private_key_path)
+      private_key = file("~/.ssh/id_rsa")
       host        = mgc_virtual_machine_instances.lb.network.public_address
     }
   }
