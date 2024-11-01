@@ -29,5 +29,10 @@ variable "machine_type" {
 
 variable "cluster_size" {
   type    = number
-  default = 3
+  default = 1
+}
+
+variable "lb_security_group_id" {
+  type    = string
+  default = "c7032194-b9a5-4808-8c42-5098a5ee667d"
 }

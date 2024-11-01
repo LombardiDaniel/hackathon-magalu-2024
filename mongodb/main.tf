@@ -2,24 +2,44 @@ terraform {
   required_providers {
     mgc = {
       source = "magalucloud/mgc"
+      version = "0.27.1"
     }
   }
 }
 
+locals {
+  # instances_private_ips = [join(",", aws_instance.example[*].id)]
+  instances_private_ips = []
+}
+
 provider "mgc" {
-  alias  = "nordeste"
-  region = "br-ne1"
+  alias  = "sudeste"
+  region = "br-se1"
 }
 
 resource "mgc_network_vpc" "mongo_db_vpc" {
-  provider    = mgc.nordeste
   name        = "${var.hackathon_group}-${var.created_by}-mongodb-vpc"
   description = "${var.hackathon_group}-${var.created_by}-mongodb-vpc"
   # tags = var.tags
 }
 
-resource "mgc_virtual_machine_instances" "basic_instance" {
-  provider = mgc.nordeste
+# LER README!!
+# resource "mgc_network_security_groups" "lb_security_group" {
+#   provider    = mgc.nordeste
+#   name = "${var.hackathon_group}-${var.created_by}-mongodb-sec-group"
+# }
+# resource "mgc_network_security_groups_rules" "allow_ssh" {
+#   description      = "Allow incoming MongoDB traffic"
+#   direction        = "ingress"
+#   ethertype        = "IPv4"
+#   port_range_max   = 27017
+#   port_range_min   = 27017
+#   protocol         = "tcp"
+#   remote_ip_prefix = "0.0.0.0/0"
+#   security_group_id = var.lb_security_group_id
+# }
+
+resource "mgc_virtual_machine_instances" "instances" {
   count    = var.cluster_size
   name     = "${var.hackathon_group}-${var.created_by}-mongodb-node-${count.index}"
   machine_type = {
@@ -39,47 +59,55 @@ resource "mgc_virtual_machine_instances" "basic_instance" {
   ssh_key_name = var.ssh_key_name
 }
 
-# # Subnets (Public)
-# resource "aws_subnet" "my_subnet_1" {
-#   vpc_id                  = aws_vpc.my_vpc.id
-#   cidr_block              = "10.0.4.0/24"
-#   availability_zone       = "us-east-1a"
-#   map_public_ip_on_launch = true
-#   tags = {
-#     Name = "my_subnet"
-#   }
-# }
-# # Subnet in us-east-1b (private)
-# resource "aws_subnet" "subnet_us_east_1b_private" {
-#   vpc_id                  = aws_vpc.my_vpc.id
-#   cidr_block              = "10.0.2.0/24"
-#   availability_zone       = "us-east-1b"
-#   map_public_ip_on_launch = false  # Private subnet
+resource "mgc_virtual_machine_instances" "lb" {
+  name     = "${var.hackathon_group}-${var.created_by}-mongodb-lb"
+  machine_type = {
+    name = "BV1-1-10"
+  }
+  image = {
+    name = "cloud-ubuntu-22.04 LTS"
+  }
+  network = {
+    vpc = {
+      id = mgc_network_vpc.mongo_db_vpc.network_id
+    }
+    associate_public_ip = true
+    delete_public_ip    = true
+    interface = {
+      security_groups = [{ "id" : var.lb_security_group_id }]
+    }
+  }
 
-#   tags = {
-#     Name = "subnet_us_east_1b_private"
-#   }
-# }
+  ssh_key_name = var.ssh_key_name
+}
 
-# # Subnet in us-east-1c (private)
-# resource "aws_subnet" "subnet_us_east_1c_private" {
-#   vpc_id                  = aws_vpc.my_vpc.id
-#   cidr_block              = "10.0.3.0/24"
-#   availability_zone       = "us-east-1c"
-#   map_public_ip_on_launch = false  # Private subnet
+locals {
+  instance_ips_comma_separated = join(",", mgc_virtual_machine_instances.instances[*].network.public_address)
+}
 
-#   tags = {
-#     Name = "subnet_us_east_1c_private"
-#   }
-# }
-# # Internet Gateway
-# resource "aws_internet_gateway" "my_igw" {
-#   vpc_id = aws_vpc.my_vpc.id
+resource "null_resource" "provision_lb" {
+  provisioner "file" {
+    source      = "scripts/init_lb.sh"
+    destination = "/tmp/init_lb.sh"
+  }
 
-#   tags = {
-#     Name = "my_igw"
-#   }
-# }
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update",
+      "sudo su -c \"curl -sSL https://get.docker.com/ | sh\"",
+      "/tmp/init_lb.sh 27017 ${mgc_virtual_machine_instances.lb.network.public_address} ${local.instance_ips_comma_separated}"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      # private_key = file(var.ssh_private_key_path)
+      host        = mgc_virtual_machine_instances.lb.network.public_address
+    }
+  }
+}
+
+
 
 # # Route Table
 # resource "aws_route_table" "my_route_table" {
