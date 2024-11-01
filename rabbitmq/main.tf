@@ -17,10 +17,10 @@ provider "mgc" {
   region = "br-ne1"
 }
 
-resource "mgc_network_vpc" "mongo_db_vpc" {
+resource "mgc_network_vpc" "rbmq_vpc" {
   provider = mgc.nordeste
-  name        = "${var.hackathon_group}-${var.created_by}-mongodb-vpc"
-  description = "${var.hackathon_group}-${var.created_by}-mongodb-vpc"
+  name        = "${var.hackathon_group}-${var.created_by}-rbmq-vpc"
+  description = "${var.hackathon_group}-${var.created_by}-rbmq-vpc"
 }
 
 # LER README!!
@@ -42,7 +42,7 @@ resource "mgc_network_vpc" "mongo_db_vpc" {
 resource "mgc_virtual_machine_instances" "instances" {
   provider = mgc.nordeste
   count    = var.cluster_size
-  name     = "${var.hackathon_group}-${var.created_by}-mongodb-node-${count.index}"
+  name     = "${var.hackathon_group}-${var.created_by}-rbmq-node-${count.index}"
   machine_type = {
     name = var.machine_type
   }
@@ -51,7 +51,7 @@ resource "mgc_virtual_machine_instances" "instances" {
   }
   network = {
     vpc = {
-      id = mgc_network_vpc.mongo_db_vpc.network_id
+      id = mgc_network_vpc.rbmq_vpc.network_id
     }
     associate_public_ip = false # If true, will create a public IP
     delete_public_ip    = false
@@ -74,7 +74,7 @@ resource "mgc_virtual_machine_instances" "lb" {
   }
   network = {
     vpc = {
-      id = mgc_network_vpc.mongo_db_vpc.network_id
+      id = mgc_network_vpc.rbmq_vpc.network_id
     }
     associate_public_ip = true
     delete_public_ip    = true
@@ -126,7 +126,22 @@ resource "null_resource" "provision_lb" {
       # "sudo su -c \"curl -sSL https://get.docker.com/ | sh\"",
       "chmod +x /tmp/scripts/*.sh",
       # "/tmp/scripts/init_lb_cilium.sh 27017 ${mgc_virtual_machine_instances.lb.network.public_address} ${local.instance_ips_comma_separated}",
-      "/tmp/scripts/init_lb_haproxy.sh 27017 ${mgc_virtual_machine_instances.lb.network.public_address} ${local.instance_ips_comma_separated}",
+      "/tmp/scripts/init_lb_haproxy.sh 5672 ${mgc_virtual_machine_instances.lb.network.public_address} ${local.instance_ips_comma_separated}",
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("~/.ssh/id_rsa")
+      host        = mgc_virtual_machine_instances.lb.network.public_address
+    }
+  }
+}
+
+resource "null_resource" "provision_rbmq" {
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir /tmp/scripts",
     ]
 
     connection {
