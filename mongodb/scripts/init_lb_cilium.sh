@@ -46,3 +46,10 @@ sleep 10
 sudo docker exec l4lb cilium service update --id 1 --frontend "$FRONTEND_IP:$BALANCE_PORT" --backends "$BACKEND_HOSTS_COMMA_SEPARATED"
 
 sudo ip addr add $FRONTEND_IP/32 dev lo label lo:v4-200
+
+sudo sysctl -qw net.ipv4.vs.sloppy_tcp=1 # schedule non-SYN packets
+sudo sysctl -qw net.ipv4.vs.pmtu_disc=0  # packets are silently fragmented
+        # do NOT reschedule a connection when dest doesn't exist
+        # anymore (needed to drain properly a LB7):
+sudo sysctl -qw net.ipv4.vs.expire_nodest_conn=0
+sudo sysctl -qw net.ipv4.vs.expire_quiescent_template=0
