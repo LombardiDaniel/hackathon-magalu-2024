@@ -203,8 +203,10 @@ resource "null_resource" "provision_rbmq" {
       "chmod +x /tmp/scripts/*.sh",
       "sudo mv /tmp/scripts/templates/rabbitmq.conf /etc/rabbitmq/rabbitmq.conf",
       "sudo mv /tmp/scripts/templates/.erlang.cookie /var/lib/rabbitmq/.erlang.cookie",
-      "sudo echo -e ${local.etc_hosts} >> /etc/hosts",
-      "sudo service rabbitmq-server enable --now"
+      "sudo sh -c \"echo ${local.etc_hosts} >> /etc/hosts\"",
+      # "sudo service rabbitmq-server enable --now"
+      "sudo chmod 600 /var/lib/rabbitmq/.erlang.cookie",
+      "sudo /etc/init.d/rabbitmq-server start"
     ]
 
     connection {
