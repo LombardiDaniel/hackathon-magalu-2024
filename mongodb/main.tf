@@ -122,13 +122,11 @@ resource "null_resource" "provision_lb" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo apt-get update",
-      "sudo su -c \"curl -sSL https://get.docker.com/ | sh\"",
+      # "sudo apt-get update",
+      # "sudo su -c \"curl -sSL https://get.docker.com/ | sh\"",
       "chmod +x /tmp/scripts/*.sh",
       # "/tmp/scripts/init_lb_cilium.sh 27017 ${mgc_virtual_machine_instances.lb.network.public_address} ${local.instance_ips_comma_separated}",
-      # "sudo apt-get install nginx -y",
-      # "sudo systemctl start nginx.service",
-      "/tmp/scripts/init_lb_nginx.sh 27017 ${mgc_virtual_machine_instances.lb.network.public_address} ${local.instance_ips_comma_separated}",
+      "/tmp/scripts/init_lb_haproxy.sh 27017 ${mgc_virtual_machine_instances.lb.network.public_address} ${local.instance_ips_comma_separated}",
     ]
 
     connection {
