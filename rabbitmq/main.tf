@@ -167,7 +167,7 @@ resource "null_resource" "provision_rbmq" {
       type        = "ssh"
       user        = "ubuntu"
       private_key = file("~/.ssh/id_rsa")
-      host        = mgc_virtual_machine_instances.instances[count.index].network.private_address
+      host        = mgc_virtual_machine_instances.instances[count.index].network.ipv6
     }
   }
 
