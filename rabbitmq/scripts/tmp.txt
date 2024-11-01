@@ -1,0 +1,11 @@
+
+defaults
+    mode tcp
+
+frontend db
+    bind :27017
+    default_backend service_backends
+
+backend service_backends
+	server db0 172.18.0.92:27017
+	server db1 172.18.0.99:27017
